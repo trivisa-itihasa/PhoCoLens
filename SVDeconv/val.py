@@ -23,7 +23,7 @@ from utils.dir_helper import dir_init
 from utils.tupperware import tupperware
 from models import get_model
 from metrics import PSNR
-from config import initialise
+from config_diffusercam import initialise
 from skimage.metrics import structural_similarity as ssim
 from utils.model_serialization import load_state_dict
 
@@ -42,7 +42,7 @@ from utils.ops import rggb_2_rgb, unpixel_shuffle
 from utils.train_helper import load_models, AvgLoss_with_dict
 
 # Experiment, add any observers by command line
-ex = Experiment("val")
+ex = Experiment("val", save_git_info=False)
 ex = initialise(ex)
 
 # To prevent "RuntimeError: received 0 items of ancdata"
@@ -74,7 +74,7 @@ def main(_run):
     # Model
     G, FFT = get_model.model(args)
 
-    ckpt_dir = Path("ckpts/phlatcam") / args.exp_name
+    ckpt_dir = Path("ckpts/diffusercam") / args.exp_name
     model_gen_path = ckpt_dir / "model_latest.pth"
     model_fft_path = ckpt_dir / "FFT_latest.pth"
     print("model_gen_path.exists()", model_gen_path.exists(), "model_fft_path.exists()", model_fft_path.exists())
@@ -206,8 +206,9 @@ def main(_run):
                 )
 
                 # Dump to output folder
-                name = filename[e].replace(".JPEG", ".png")
-                parent = name.split("_")[0]
+                # name = filename[e].replace(".JPEG", ".png")
+                name = filename[e].replace(".npy", ".png")
+                parent = "" # name.split("_")[0]
                 path = val_path / parent
                 path.mkdir(exist_ok=True, parents=True)
                 path_output = path / ("output_" + name)

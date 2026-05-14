@@ -33,6 +33,7 @@ fft_args_dict = {
     "fft_gamma": 100,  # Gamma for Weiner init
     "fft_requires_grad": False,
     "fft_epochs": 0,
+    "use_mask": False,
 }
 
 def base_config():
@@ -41,7 +42,7 @@ def base_config():
     multi = 1
     use_spatial_weight = False
     weight_update = True
-    dataset = "diffusercam"
+    dataset_name = "diffusercam"
     # Use FFT arguments from the global definition
     locals().update(fft_args_dict)
     # ---------------------------------------------------------------------------- #
@@ -139,7 +140,8 @@ def base_config():
     val_train = False
     static_val_image = ""
 
-
+    decode_sim = False
+    preprocess_with_unet = False
 
 
 def ours_diffusercam_mulnew_unet_padding_decode_sim():

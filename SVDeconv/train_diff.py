@@ -20,7 +20,7 @@ from dataloader import get_dataloaders
 from utils.dir_helper import dir_init
 from models import get_model
 from loss import GLoss
-from diff_config import initialise
+from config_diffusercam import initialise
 from metrics import PSNR
 
 # Typing
@@ -43,7 +43,7 @@ from utils.ops import rggb_2_rgb, unpixel_shuffle
 from utils.tupperware import tupperware
 
 # Experiment, add any observers by command line
-ex = Experiment("Train")
+ex = Experiment("Train", save_git_info=False)
 ex = initialise(ex)
 
 # local rank 0: for logging, saving ckpts

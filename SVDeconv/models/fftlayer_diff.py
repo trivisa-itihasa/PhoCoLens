@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 from PIL import Image
 
-ex = Experiment("FFT-Layer")
+ex = Experiment("FFT-Layer", save_git_info=False)
 ex = initialise(ex)
 
 SIZE = 270, 480

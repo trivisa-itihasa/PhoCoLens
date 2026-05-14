@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from utils.typing_alias import *
 
 
-ex = Experiment("data")
+ex = Experiment("data", save_git_info=False)
 ex = initialise(ex)
 
 

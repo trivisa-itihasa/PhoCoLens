@@ -12,7 +12,7 @@ from utils.tupperware import tupperware
 if TYPE_CHECKING:
     from utils.typing_alias import *
 
-ex = Experiment("Unet")
+ex = Experiment("Unet", save_git_info=False)
 ex = initialise(ex)
 
 

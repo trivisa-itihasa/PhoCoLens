@@ -12,7 +12,7 @@ import cv2
 if TYPE_CHECKING:
     from utils.typing_alias import *
 
-ex = Experiment("FFT-Layer")
+ex = Experiment("FFT-Layer", save_git_info=False)
 ex = initialise(ex)
 
 

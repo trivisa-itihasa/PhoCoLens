@@ -15,38 +15,43 @@ from torchvision.transforms.functional import (
     resize,
 )
 from PIL import Image
-from waveprop.devices import  SensorParam
+from waveprop.devices import  SensorParam, sensor_dict
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from models.fftlayer_diff_original import FFTLayer_diff
+from config_diffusercam import fft_args
+from tqdm import tqdm
 
-height = 270 * 4
-width = 480 * 4
-fft_args_dict = {
-    "psf_mat": Path("data/diffusercam/psf.tiff"),
-    "psf_height": height,
-    "psf_width": width,
-    "psf_centre_x": height // 2,
-    "psf_centre_y": width // 2,
-    "psf_crop_size_x": height,
-    "psf_crop_size_y": width,
-    "meas_height": height,
-    "meas_width": width,
-    "meas_centre_x": height // 2,
-    "meas_centre_y": width // 2,
-    "meas_crop_size_x": height,
-    "meas_crop_size_y": width,
-    "pad_meas_mode": "replicate",
-    "image_height": 270,
-    "image_width": 480,
-    "fft_gamma": 100,  # Gamma for Weiner init
-    "fft_requires_grad": False,
-    "fft_epochs": 0,
-}
+# height = 270 * 4
+# width = 480 * 4
+# fft_args_dict = {
+#     "psf_mat": Path("data/diffusercam/psf.tiff"),
+#     "psf_height": height,
+#     "psf_width": width,
+#     "psf_centre_x": height // 2,
+#     "psf_centre_y": width // 2,
+#     "psf_crop_size_x": height,
+#     "psf_crop_size_y": width,
+#     "meas_height": height,
+#     "meas_width": width,
+#     "meas_centre_x": height // 2,
+#     "meas_centre_y": width // 2,
+#     "meas_crop_size_x": height,
+#     "meas_crop_size_y": width,
+#     "pad_meas_mode": "replicate",
+#     "image_height": 270,
+#     "image_width": 480,
+#     "fft_gamma": 100,  # Gamma for Weiner init
+#     "fft_requires_grad": False,
+#     "fft_epochs": 0,
+# }
 
-FFT = FFTLayer_diff(fft_args_dict)
+FFT = FFTLayer_diff(fft_args)
 PADD_SIZE = 270*3, 480*3
 SIZE = 270, 480
 sensor = dict(size = np.array([4.8e-6 * 1080, 4.8e-6 * 1920]))
+sensor_key = 'poop'
+sensor_dict[sensor_key] = sensor
 # 4.8 * 10e-6 * 4 * 480 = 0.009216
 # 2e-3 / 0.009216 * 0.4 = 0.08680555555555556
 
@@ -74,9 +79,9 @@ def load_psf(path):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Simulate the lensless capture')
-    parser.add_argument('--psf_path', default="data/phase_psf/psf.npy", help='psf folder path')
-    parser.add_argument('--obj_path', default=None, help='object folder path')
-    parser.add_argument('--save_path', default="output/decode_and_sim_rgb", help='save folder path')
+    parser.add_argument('--psf_path', default="data/diffusercam/psf.tiff", help='psf folder path')
+    parser.add_argument('--obj_path', default="data/diffusercam/ground_truth_lensed", help='object folder path')
+    parser.add_argument('--save_path', default="data/diffusercam/decode_sim_padding_png", help='save folder path')
     parser.add_argument('--adj', help='whether to adjust the light intensity', action='store_true',default=False)
 
     args = parser.parse_args()
@@ -122,8 +127,8 @@ def load_sim_save(simulator, obj_path, save_path, use_adjust_light_intensity=Fal
     # load object
     # obj = cv2.imread(obj_path)
     obj = np.load(obj_path)
-    print("obj shape: ", obj.shape)
-    # obj = cv2.normalize(obj, None, 0, 255, cv2.NORM_MINMAX)
+    # print("obj shape: ", obj.shape)
+    obj = cv2.normalize(obj, None, 0, 255, cv2.NORM_MINMAX)
 
 
     # simulate
@@ -143,12 +148,13 @@ def load_sim_save(simulator, obj_path, save_path, use_adjust_light_intensity=Fal
   
     # np.save(save_npy_path, img)
 
-    decoded = (decoded * 255).astype(np.uint8)    
+    decoded = (decoded * 255).astype(np.uint8)
+    print(decoded.min(), decoded.max())
 
     save_png_path = os.path.join(save_path + "_png", os.path.basename(obj_path))
     save_png_path = save_png_path.replace(".npy", ".png")
     os.makedirs(os.path.dirname(save_png_path), exist_ok=True)
-    print(f"save_path: {save_png_path}")
+    # print(f"save_path: {save_png_path}")
     cv2.imwrite(save_png_path, decoded)
    
 
@@ -168,14 +174,14 @@ if __name__ == "__main__":
     
     # transfer the psf 
     
-    simulator = FarFieldSimulator(object_height = 0.4, scene2mask = 0.0868 * 4, mask2sensor = 2e-3, sensor = sensor, psf = psf, is_torch=True, quantize=False, return_float=True)
+    simulator = FarFieldSimulator(object_height = 0.4, scene2mask = 0.0868 * 4, mask2sensor = 2e-3, sensor = sensor_key, psf = psf, is_torch=True, quantize=False, return_float=True)
 
     if os.path.isdir(obj_path):
         obj_path_list = os.listdir(obj_path)
         obj_path_list = [os.path.join(obj_path, obj_path_i) for obj_path_i in obj_path_list]
-        for obj_path_i in obj_path_list:
-            if obj_path_i.endswith(".npy"):
-                load_sim_save(simulator, obj_path_i, save_path, use_adjust_light_intensity=adj)
+        obj_path_list = [obj_path for obj_path in obj_path_list if obj_path.endswith(".npy")]
+        for obj_path_i in tqdm(obj_path_list):
+            load_sim_save(simulator, obj_path_i, save_path, use_adjust_light_intensity=adj)
     else:
         load_sim_save(simulator, obj_path, save_path, use_adjust_light_intensity=adj)
 

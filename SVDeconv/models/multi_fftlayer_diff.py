@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 from PIL import Image
 from models.unet import UNet270480
 
-ex = Experiment("FFT-Layer")
+ex = Experiment("FFT-Layer", save_git_info=False)
 ex = initialise(ex)
 
 SIZE = 270, 480

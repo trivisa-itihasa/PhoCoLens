@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from utils.typing_alias import *
 
 
-ex = Experiment("metrics")
+ex = Experiment("metrics", save_git_info=False)
 
 
 def PSNR(source: "Tensor", target: "Tensor"):
